@@ -1,5 +1,7 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import React from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
@@ -22,6 +24,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { authClient } from "@/lib/auth-client";
 
 const registerSchema = z.object({
   name: z.string().trim().min(3, { message: "O nome é obrigatório." }),
@@ -29,10 +32,12 @@ const registerSchema = z.object({
   password: z
     .string()
     .trim()
-    .min(6, { message: "A senha deve ter pelo menos 6 caracteres." }),
+    .min(8, { message: "A senha deve ter pelo menos 8 caracteres." }),
 });
 
 export function SignUpForm() {
+  const route = useRouter();
+
   const registerForm = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -42,8 +47,19 @@ export function SignUpForm() {
     },
   });
 
-  function onSubmitRegister(data: z.infer<typeof registerSchema>) {
-    console.log(data);
+  async function onSubmitRegister(data: z.infer<typeof registerSchema>) {
+    await authClient.signUp.email(
+      {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      },
+      {
+        onSuccess: () => {
+          route.push("/dashboard");
+        },
+      },
+    );
   }
 
   return (
@@ -109,8 +125,16 @@ export function SignUpForm() {
             />
           </CardContent>
           <CardFooter>
-            <Button className="w-full" type="submit">
-              Criar Conta
+            <Button
+              className="w-full"
+              type="submit"
+              disabled={registerForm.formState.isSubmitting}
+            >
+              {registerForm.formState.isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                "Criar Conta"
+              )}
             </Button>
           </CardFooter>
         </form>
