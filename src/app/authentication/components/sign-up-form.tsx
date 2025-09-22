@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import z from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,13 @@ export function SignUpForm() {
       {
         onSuccess: () => {
           route.push("/dashboard");
+        },
+        onError: (ctx) => {
+          if (ctx.error.code === "USER_ALREADY_EXISTS") {
+            toast.error("Este email já está cadastrado.");
+            return;
+          }
+          toast.error("Falha ao criar conta.");
         },
       },
     );
