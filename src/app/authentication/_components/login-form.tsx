@@ -135,17 +135,16 @@ export function LoginForm() {
               className="w-full"
               type="button"
               variant="outline"
-              disabled={loginForm.formState.isSubmitting}
               onClick={onSubmitGoogleLogin}
             >
-              {loginForm.formState.isSubmitting ? (
+              <FcGoogle />
+              <span>Entrar com Google</span>
+              {/* {loginForm.formState.isSubmitting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  <FcGoogle />
-                  <span>Entrar com Google</span>
                 </>
-              )}
+              )} */}
             </Button>
           </CardFooter>
         </form>
