@@ -10,7 +10,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -56,7 +56,9 @@ const items = [
 ];
 
 export function AppSidebar() {
+  const session = authClient.useSession();
   const route = useRouter();
+
   const handleSignOut = async () => {
     await authClient.signOut({
       fetchOptions: {
@@ -97,10 +99,20 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <SidebarMenuItem>
+        <SidebarMenuItem className="border-t">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button>Clínica</Button>
+              <SidebarMenuButton size={"lg"}>
+                <Avatar>
+                  <AvatarFallback>GT</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm">{session.data?.user.clinic.name}</p>
+                  <p className="text-muted-foreground text-sm">
+                    {session.data?.user.email}
+                  </p>
+                </div>
+              </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem onClick={handleSignOut}>
