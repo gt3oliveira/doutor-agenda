@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { useForm } from "react-hook-form";
+import { FcGoogle } from "react-icons/fc";
 import { toast } from "sonner";
 import z from "zod";
 
@@ -63,6 +64,13 @@ export function LoginForm() {
     );
   }
 
+  async function onSubmitGoogleLogin() {
+    await authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/dashboard",
+    });
+  }
+
   return (
     <Card>
       <Form {...loginForm}>
@@ -111,7 +119,7 @@ export function LoginForm() {
               )}
             />
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex flex-col gap-2">
             <Button
               className="w-full"
               type="submit"
@@ -121,6 +129,22 @@ export function LoginForm() {
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 "Entrar"
+              )}
+            </Button>
+            <Button
+              className="w-full"
+              type="button"
+              variant="outline"
+              disabled={loginForm.formState.isSubmitting}
+              onClick={onSubmitGoogleLogin}
+            >
+              {loginForm.formState.isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <FcGoogle />
+                  <span>Entrar com Google</span>
+                </>
               )}
             </Button>
           </CardFooter>
