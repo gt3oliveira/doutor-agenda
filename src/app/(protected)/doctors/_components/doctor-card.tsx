@@ -1,7 +1,27 @@
 "use client";
-import { CalendarIcon, ClockIcon, DollarSignIcon } from "lucide-react";
+import {
+  CalendarIcon,
+  ClockIcon,
+  DollarSignIcon,
+  Loader2,
+  TrashIcon,
+} from "lucide-react";
+import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { toast } from "sonner";
 
+import { deleteDoctor } from "@/actions/delete-doctor";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,6 +55,20 @@ export const DoctorCard = ({ doctor }: DoctorCardProps) => {
 
   const availability = getAvailability(doctor);
 
+  const deleteDoctorAction = useAction(deleteDoctor, {
+    onSuccess: () => {
+      toast.success("Médico excluido com sucesso!");
+    },
+    onError: () => {
+      toast.error("Erro ao excluir médico.");
+    },
+  });
+
+  const handleDeleteDoctorClick = () => {
+    if (!doctor) return;
+    deleteDoctorAction.execute({ id: doctor.id });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -66,7 +100,7 @@ export const DoctorCard = ({ doctor }: DoctorCardProps) => {
         </Badge>
       </CardContent>
       <Separator />
-      <CardFooter>
+      <CardFooter className="flex flex-col gap-2">
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <Button className="w-full">Ver detalhes</Button>
@@ -80,6 +114,42 @@ export const DoctorCard = ({ doctor }: DoctorCardProps) => {
             onSuccess={() => setIsOpen(false)}
           />
         </Dialog>
+        {doctor && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild className="w-full">
+              <Button
+                variant="outline"
+                className="text-red-600 hover:border-red-500 hover:text-red-600"
+              >
+                <TrashIcon />
+                Deletar
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Tem certeza que deseja deletar esse médico?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  Essa ação não pode ser desfeita. Isso irá deletar o médico e
+                  todas as suas consultas agendadas.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDeleteDoctorClick}
+                  disabled={deleteDoctorAction.isPending}
+                >
+                  {deleteDoctorAction.isPending && (
+                    <Loader2 className="mr-2 animate-spin" />
+                  )}
+                  Deletar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </CardFooter>
     </Card>
   );
