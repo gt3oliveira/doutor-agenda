@@ -44,7 +44,8 @@ interface DoctorCardProps {
 }
 
 export const DoctorCard = ({ doctor }: DoctorCardProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isUpsertDoctorDialogOpen, setIsUpsertDoctorDialogOpen] =
+    useState(false);
 
   const doctorNameInitials = doctor.name
     .split(" ")
@@ -101,7 +102,10 @@ export const DoctorCard = ({ doctor }: DoctorCardProps) => {
       </CardContent>
       <Separator />
       <CardFooter className="flex flex-col gap-2">
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog
+          open={isUpsertDoctorDialogOpen}
+          onOpenChange={setIsUpsertDoctorDialogOpen}
+        >
           <DialogTrigger asChild>
             <Button className="w-full">Ver detalhes</Button>
           </DialogTrigger>
@@ -111,7 +115,8 @@ export const DoctorCard = ({ doctor }: DoctorCardProps) => {
               availableFromTime: availability.from.format("HH:mm:ss"),
               availableToTime: availability.to.format("HH:mm:ss"),
             }}
-            onSuccess={() => setIsOpen(false)}
+            onSuccess={() => setIsUpsertDoctorDialogOpen(false)}
+            isOpen={isUpsertDoctorDialogOpen}
           />
         </Dialog>
         {doctor && (
