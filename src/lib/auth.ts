@@ -42,7 +42,7 @@ export const auth = betterAuth({
     modelName: "usersTable",
   },
   session: {
-    modelName: "sessionsTables",
+    modelName: "sessionsTable",
   },
   account: {
     modelName: "accountsTable",

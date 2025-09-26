@@ -24,7 +24,7 @@ export const usersTable = pgTable("users", {
   updatedAt: timestamp("updated_at").notNull(),
 });
 
-export const sessionsTables = pgTable("sessions", {
+export const sessionsTable = pgTable("sessions", {
   id: text("id").primaryKey(),
   expiresAt: timestamp("expires_at").notNull(),
   token: text("token").notNull().unique(),
