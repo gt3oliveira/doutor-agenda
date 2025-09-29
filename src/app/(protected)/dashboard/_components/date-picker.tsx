@@ -23,12 +23,10 @@ export function DatePicker({
     "from",
     parseAsIsoDate.withDefault(new Date()),
   );
-
   const [to, setTo] = useQueryState(
     "to",
     parseAsIsoDate.withDefault(addMonths(new Date(), 1)),
   );
-
   const handleDateSelect = (dateRange: DateRange | undefined) => {
     if (dateRange?.from) {
       setFrom(dateRange.from, {
@@ -41,12 +39,10 @@ export function DatePicker({
       });
     }
   };
-
   const date = {
     from,
     to,
   };
-
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>
