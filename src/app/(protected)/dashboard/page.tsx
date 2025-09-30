@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import { and, count, desc, eq, gte, lte, sql, sum } from "drizzle-orm";
+import { Calendar } from "lucide-react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import React from "react";
@@ -13,10 +14,14 @@ import {
   PageHeaderContent,
   PageTitle,
 } from "@/components/page-container";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable } from "@/components/ui/data-table";
+import { getDashboard } from "@/data/get-dashboard";
 import { db } from "@/db";
 import { appointmentsTable, doctorsTable, patientsTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
+import { appointmentsTableColumns } from "../appointments/_components/table-columns";
 import { AppointmentsChart } from "./_components/appointments-chart";
 import { DatePicker } from "./_components/date-picker";
 import { StatsCard } from "./_components/stats-card";
@@ -52,111 +57,26 @@ export default async function DashboardPage({
     );
   }
 
-  const [
-    [totalRevenue],
-    [totalAppointment],
-    [totalPatients],
-    [totalDoctors],
+  const {
+    totalRevenue,
+    totalAppointments,
+    totalPatients,
+    totalDoctors,
     topDoctors,
     topSpecialties,
-  ] = await Promise.all([
-    db
-      .select({
-        total: sum(appointmentsTable.appointmentPriceInCents),
-      })
-      .from(appointmentsTable)
-      .where(
-        and(
-          eq(appointmentsTable.clinicId, session.user.clinic.id),
-          gte(appointmentsTable.appointmentDate, new Date(from)),
-          lte(appointmentsTable.appointmentDate, new Date(to)),
-        ),
-      ),
-    db
-      .select({
-        total: count(),
-      })
-      .from(appointmentsTable)
-      .where(
-        and(
-          eq(appointmentsTable.clinicId, session.user.clinic.id),
-          gte(appointmentsTable.appointmentDate, new Date(from)),
-          lte(appointmentsTable.appointmentDate, new Date(to)),
-        ),
-      ),
-    db
-      .select({
-        total: count(),
-      })
-      .from(patientsTable)
-      .where(eq(patientsTable.clinicId, session.user.clinic.id)),
-    db
-      .select({
-        total: count(),
-      })
-      .from(doctorsTable)
-      .where(eq(doctorsTable.clinicId, session.user.clinic.id)),
-    db
-      .select({
-        id: doctorsTable.id,
-        name: doctorsTable.name,
-        avatarImageUrl: doctorsTable.avatarImageUrl,
-        specialty: doctorsTable.specialty,
-        appointments: count(appointmentsTable.id),
-      })
-      .from(doctorsTable)
-      .leftJoin(
-        appointmentsTable,
-        and(
-          eq(appointmentsTable.doctorId, doctorsTable.id),
-          gte(appointmentsTable.appointmentDate, new Date(from)),
-          lte(appointmentsTable.appointmentDate, new Date(to)),
-        ),
-      )
-      .where(eq(doctorsTable.clinicId, session.user.clinic.id))
-      .groupBy(doctorsTable.id)
-      .orderBy(desc(count(appointmentsTable.id)))
-      .limit(10),
-    db
-      .select({
-        specialty: doctorsTable.specialty,
-        appointments: count(appointmentsTable.id),
-      })
-      .from(appointmentsTable)
-      .innerJoin(doctorsTable, eq(appointmentsTable.doctorId, doctorsTable.id))
-      .where(
-        and(
-          eq(appointmentsTable.doctorId, doctorsTable.id),
-          gte(appointmentsTable.appointmentDate, new Date(from)),
-          lte(appointmentsTable.appointmentDate, new Date(to)),
-        ),
-      )
-      .groupBy(doctorsTable.specialty)
-      .orderBy(desc(count(appointmentsTable.id))),
-  ]);
-
-  const chartStartDate = dayjs().subtract(10, "day").startOf("day").toDate();
-  const chartEndDate = dayjs().add(10, "day").endOf("day").toDate();
-
-  const dailyAppointmentsData = await db
-    .select({
-      date: sql<string>`DATE(${appointmentsTable.appointmentDate})`.as("date"),
-      appointments: count(appointmentsTable.id),
-      revenue:
-        sql<number>`COALESCE(SUM(${appointmentsTable.appointmentPriceInCents}), 0)`.as(
-          "revenue",
-        ),
-    })
-    .from(appointmentsTable)
-    .where(
-      and(
-        eq(appointmentsTable.clinicId, session.user.clinic.id),
-        gte(appointmentsTable.appointmentDate, chartStartDate),
-        lte(appointmentsTable.appointmentDate, chartEndDate),
-      ),
-    )
-    .groupBy(sql`DATE(${appointmentsTable.appointmentDate})`)
-    .orderBy(sql`DATE(${appointmentsTable.appointmentDate})`);
+    todayAppointments,
+    dailyAppointmentsData,
+  } = await getDashboard({
+    from,
+    to,
+    session: {
+      user: {
+        clinic: {
+          id: session.user.clinic.id,
+        },
+      },
+    },
+  });
 
   return (
     <PageContainer>
@@ -173,17 +93,32 @@ export default async function DashboardPage({
       </PageHeader>
       <PageContent>
         <StatsCard
-          totalAppointments={totalAppointment.total}
+          totalAppointments={totalAppointments.total}
           totalDoctors={totalDoctors.total}
           totalPatients={totalPatients.total}
-          totalRevenue={Number(totalRevenue.total)}
+          totalRevenue={totalRevenue.total ? Number(totalRevenue.total) : null}
         />
         <div className="grid grid-cols-[2.25fr_1fr] gap-4">
           <AppointmentsChart dailyAppointmentsData={dailyAppointmentsData} />
           <TopDoctors doctors={topDoctors} />
         </div>
         <div className="grid grid-cols-[2.25fr_1fr] gap-4">
-          <div></div>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <Calendar className="text-muted-foreground" />
+                <CardTitle className="text-base">
+                  Agendamentos de hoje
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                columns={appointmentsTableColumns}
+                data={todayAppointments}
+              />
+            </CardContent>
+          </Card>
           <TopSpecialties specialties={topSpecialties} />
         </div>
       </PageContent>
