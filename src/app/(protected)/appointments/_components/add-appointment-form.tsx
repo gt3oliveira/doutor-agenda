@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, formatDate } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import dayjs from "dayjs";
 import { CalendarIcon } from "lucide-react";
@@ -287,7 +287,9 @@ export const AddAppointmentForm = ({
                       selected={field.value}
                       onSelect={field.onChange}
                       disabled={(date) =>
-                        date < new Date() || !isDateAvailable(date)
+                        formatDate(date, "yyyy-MM-dd") <
+                          formatDate(new Date(), "yyyy-MM-dd") ||
+                        !isDateAvailable(date)
                       }
                       initialFocus
                       locale={ptBR}
